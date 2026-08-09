@@ -1,66 +1,42 @@
-# CS-461-Program-1 LLM Prompts:
+# Kansas Route Finder - AI Search Algorithms
 
-**LLM Used:**  ChatGPT 4o
+## Overview
+This program implements five classic search algorithms from artificial intelligence and applies them to a real route-finding problem: finding a path between towns in Kansas using a road-adjacency graph and geographic coordinates.
 
-1. *Copied and pasted program instructions and included the formats for the Adjacencies.txt and coordinates.csv files* -- Read the following instructions let me know if you understand them.
-2. I am using Java to implement this program. What data structures would you recommend to store the adjacencies and coordinates?
-   - GPT Suggestions:
-     - HashMap<String, List<String>> adjacencyList for adjacencies
-     - Hashmap<String, City> cityMap for coordinates
-   - *I didn't want to make a City object with the fields for name, latitude, and longitude, so I just stored coordinates in Hashmap<String, double[]>
-4. Can you write me a function to load the adjacencies into a Hashmap<String, String>
-   - This resulted in the getAdjacencies method
-5. Can you write me a method to load the coordinates into a Hashmap<String, Double[]>
-   - This resulted in the getCityMap method
-6. Can you write a method to calculate the euclidean distance between two coordinates.
-   - Provided the distance formula, but the scale was off -- it was 1 to 1, so each difference in latitude/longitude accounted for 1 unit
-   - Provided code did not account for how many km were in a degree, but I didn't notice until later on -- addressed later
-7. Using the data structures provided, can you implement a breadth first search based on the following pseudocode:
-   - ![image](https://github.com/user-attachments/assets/6e6d11fa-00de-48b3-b7e3-2900a2e9aeea)
-   - Resulted in breadthFirstSearch method
-   - No changes were necessary to make the given code work
-8. Can you now implement a depth first search based on the following pseudocode:
-   - ![image](https://github.com/user-attachments/assets/444bab46-3c69-4450-8b5b-2577bdcf93f3)
-   - Resulted in dfs method
-   - No changes were necessary to make the given code work
-9. Can you now implement an ID-DFS search?
-   - This resulted in initial iddfs method
-   - Initial provided code for the iddfs had a maxDepth parameter, even though that should only be included in the depth limited search helper function
-   - depthLimitedDFS method worked fine
-10. Why is the max depth passed as a parameter to the iddfs function? That sets a limit, the depth should increase as the search goes on until nothing is found.
-    - This provided a correct implementation of the iddfs method, where depth was increased dynamicall until the goal was found or no solutions existed
-11. Can you now implement a best first search based on the following pseudocode:
-    - ![image](https://github.com/user-attachments/assets/379b4c5d-81b3-46f3-aef6-b127a907ea1e)
-    - Resulted in bestFirstSearch method
-    - No changes were necessary to make the given code work
-12. Can you now implement A* based on the following pseudocode:
-    - ![image](https://github.com/user-attachments/assets/d7cd3c2c-683f-46de-bd4a-b3c0e2cf8111)
-    - Resulted in aStarSearch method
-    - No changes were necessary to make the given code work
+Implemented algorithms:
+- Breadth-First Search (BFS)
+- Depth-First Search (DFS)
+- Iterative-Deepening Depth-First Search (ID-DFS)
+- Best-First (greedy) Search
+- A* Search
 
-*Note: Each of the search methods returned a List<String> containing the cities in order of the path*
+The program reads town-to-town connections from `Adjacencies.txt` and town latitude/longitude from `coordinates.csv`, then lets the user pick a start town, a destination town, and a search algorithm from an interactive console menu.
+For informed searches (Best-First and A*), the heuristic is the Euclidean distance between city coordinates, converted from degrees to kilometers.
 
-13. How can I calculate the distance for the routes I've generated?
-    - Resulted in calculateRouteDistance method
-    - Added the euclidean distance of each pair of cities in the path
-   
-*After testing the functionality of the program and outputting distance, I noticed the distance in km was very low*
+## Why It Exists
+This was written for CS 461 (Artificial Intelligence) as an assignment to implement and compare uninformed and informed search strategies on a non-trivial, real-world graph rather than a toy example.
+Each search method reports how long it took to run and enforces a 10-second timeout, which makes the practical difference between the algorithms (especially DFS vs. BFS vs. A*) visible on the same dataset.
 
-14. The total route distance for each route doesn't make sense. I think the euclidean distance method is a little off. The total route distances end up only being a few km (<10). Do you know what the issue is?
-    - GPT explained that the degrees needed to be converted to km before calculating the distance. It also explained how longitude degrees varied by which latitude they were at and provided a formula to adjust them
-    - After explaining, GPT provided an updated euclideanDistance method that took km and longitude variation into account
-   
-15. I would like to add a way to track the time that each method takes to run, as well as a timeout if the search takes 10 seconds or more to complete. *Copied and pasted search methods into GPT*
-    - GPT added a global variable to represent the max timeout duration
-    - Tracked time in milliseconds, I found this to not be precise enough, so I changed the tracked time into nanoseconds, then divided by 1,000,000 to get milliseconds
-    - This change from GPT displayed a message if the search timed out and returned null for the path
-    - If a path was found, then the total search time was displayed before returning the path
-   
-# Overall, I found ChatGPT 4o to perform these tasks very well. Since these are very well known algorithms, it had little problems with implementing them quickly. I only had a few issues with the code it generated, and making manual tweaks was relatively easy.
+Development included the use of ChatGPT 4o as a coding assistant.
+The full prompt-and-response log is preserved in `PROMPTS.md` for transparency; algorithm pseudocode was supplied by the assignment and given to the model, and the resulting code was tested and manually corrected (notably the distance-heuristic formula, which initially did not convert coordinate degrees to kilometers).
 
+## How to Run
+Requires a Java Development Kit (JDK 8+).
 
+From the `SearchMethods` directory (so the program can find `Adjacencies.txt` and `coordinates.csv` via relative paths):
 
+```bash
+cd SearchMethods
+javac -d bin src/routeFinder/*.java
+java -cp bin routeFinder.RouteFinder
+```
 
+Follow the interactive prompts: enter a starting town, a destination town, and select a search algorithm (1-5) from the menu.
+Town names must match the entries in `coordinates.csv` exactly (case-sensitive, underscores instead of spaces, e.g. `Bluff_City`).
 
-
-
+## What It Demonstrates Technically
+- Graph search with explicit open/closed sets over an adjacency-list representation
+- FIFO queue (BFS), LIFO stack (DFS), and recursive depth-limited search with backtracking (ID-DFS)
+- Priority-queue-based search ordered by a heuristic function (Best-First) and by combined path cost + heuristic (A*)
+- A geographic distance heuristic that accounts for the non-uniform scale of longitude relative to latitude (cosine correction)
+- Basic performance instrumentation (search timing in milliseconds) and a timeout safeguard for searches that fail to terminate quickly
